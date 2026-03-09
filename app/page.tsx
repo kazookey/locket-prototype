@@ -1,75 +1,59 @@
 "use client";
-import React, { useState } from "react";
-import Cropper from "react-easy-crop";
-import { ChangeEvent } from "react";
+import React, { useRef, useState } from "react";
+import CanvasDraw from "react-canvas-draw";
 
 export default function Home() {
-  const [image, setImage] = useState<string | null>(null);
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [shape, setShape] = useState<"round" | "rect">("round");
+  const canvasRef = useRef<any>(null);
+  const [brushColor, setBrushColor] = useState("#000000");
 
-  const onSelectFile = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const reader = new FileReader();
-      reader.addEventListener("load", () => setImage(reader.result as string));
-      reader.readAsDataURL(e.target.files[0]);
+  const handleClear = () => canvasRef.current?.clear();
+  const handleUndo = () => canvasRef.current?.undo();
+
+  const handleSubmit = () => {
+    if (canvasRef.current) {
+      const drawingData = canvasRef.current.getDataURL(); 
+      console.log(drawingData);
+      alert("Doodle sent to the Keychain Queue!");
     }
   };
 
   return (
-    <main className="flex flex-col items-center p-10 min-h-screen bg-gray-900 text-white">
-      <h1 className="text-2xl font-bold mb-4 text-gray-100">Locket Photo Uploader</h1>
-      
-      <input 
-        type="file" 
-        accept="image/*" 
-        onChange={onSelectFile} 
-        className="mb-4 p-2 bg-gray-800 text-white rounded shadow border border-gray-700" 
-      />
+    <main className="flex flex-col items-center p-6 min-h-screen bg-gray-900 text-white font-sans">
+      <h1 className="text-3xl font-black mb-2 text-blue-400">POCKET LOCKET</h1>
+      <p className="text-gray-400 mb-6 italic text-center">Draw your design below for your shrink-plastic keychain!</p>
 
-      {/* Shape Selector Buttons */}
-      {image && (
-        <div className="flex gap-4 mb-4">
-          <button 
-            onClick={() => setShape("round")} 
-            className={`px-4 py-2 rounded ${shape === "round" ? "bg-blue-600" : "bg-gray-700"}`}
-          >
-            Circle
-          </button>
-          <button 
-            onClick={() => setShape("rect")} 
-            className={`px-4 py-2 rounded ${shape === "rect" ? "bg-blue-600" : "bg-gray-700"}`}
-          >
-            Square
-          </button>
-        </div>
-      )}
+      {/* Drawing Controls */}
+      <div className="flex gap-4 mb-4">
+        <input 
+          type="color" 
+          value={brushColor} 
+          onChange={(e) => setBrushColor(e.target.value)}
+          className="w-10 h-10 border-none bg-transparent cursor-pointer"
+        />
+        <button onClick={handleUndo} className="bg-gray-700 px-4 py-2 rounded">Undo</button>
+        <button onClick={handleClear} className="bg-red-900 px-4 py-2 rounded">Clear</button>
+      </div>
 
-      {image ? (
-        <div className="relative w-full max-w-md h-96 bg-gray-800 rounded-lg overflow-hidden border border-gray-600">
-          <Cropper
-            image={image}
-            crop={crop}
-            zoom={zoom}
-            aspect={1}
-            cropShape={shape} 
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-          />
-        </div>
-      ) : (
-        <p className="text-gray-400 mt-10">Please upload an image to start editing.</p>
-      )}
+      {/* The Canvas - Sized for mobile/tablet festival use */}
+      <div className="border-4 border-blue-500 rounded-xl overflow-hidden bg-white shadow-2xl">
+        <CanvasDraw
+          ref={canvasRef}
+          brushColor={brushColor}
+          canvasWidth={350}
+          canvasHeight={350}
+          brushRadius={4}
+          lazyRadius={0} 
+        />
+      </div>
 
-      {image && (
-        <button 
-          className="mt-6 bg-blue-500 hover:bg-blue-400 text-white px-6 py-2 rounded-full font-bold shadow-lg transition"
-          onClick={() => alert("Photo saved to queue!")}
-        >
-          Submit for Keychain
-        </button>
-      )}
+      <button 
+        onClick={handleSubmit}
+        className="mt-8 bg-blue-600 hover:bg-blue-500 text-white w-full max-w-xs py-4 rounded-full font-bold text-xl shadow-lg transition-transform active:scale-95"
+      >
+        SUBMIT DOODLE
+      </button>
+
+      <p className="mt-4 text-xs text-gray-500">Note: Designs will shrink and darken once baked!</p>
     </main>
   );
 }
